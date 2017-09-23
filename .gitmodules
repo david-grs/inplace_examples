@@ -1,0 +1,6 @@
+[submodule "inplace_string"]
+	path = inplace_string
+	url = https://github.com/david-grs/inplace_string.git
+[submodule "static_any"]
+	path = static_any
+	url = https://github.com/david-grs/static_any.git
