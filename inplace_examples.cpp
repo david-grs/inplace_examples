@@ -7,6 +7,8 @@
 #include <vector>
 #include <experimental/any>
 
+#include <geiger/geiger.h>
+
 namespace InPlace
 {
 using MetadataTag = inplace_string<15>;
@@ -14,13 +16,15 @@ using MetadataValue = static_any<16>;
 
 using Metadata = std::pair<MetadataTag, MetadataValue>;
 
-struct MetadataTree : public boost::container::static_vector<Metadata, 8>
+struct MetadataTree
 {
 	template <typename StringT, typename ValueT>
 	void Add(StringT&& str, ValueT&& value)
 	{
-		this->emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
+		_metadata.emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
 	}
+
+	boost::container::static_vector<Metadata, 8> _metadata;
 };
 }
 
@@ -29,13 +33,15 @@ using MetadataValue = std::experimental::any;
 
 using Metadata = std::pair<MetadataTag, MetadataValue>;
 
-struct MetadataTree : public std::vector<Metadata>
+struct MetadataTree
 {
 	template <typename StringT, typename ValueT>
 	void Add(StringT&& str, ValueT&& value)
 	{
-		this->emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
+		_metadata.emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
 	}
+
+	std::vector<Metadata> _metadata;
 };
 
 template <typename TreeT>
@@ -43,19 +49,35 @@ TreeT GetTree(int i, double d, bool b)
 {
 	TreeT tree;
 	tree.Add("metadata1", i);
-	tree.Add("foobaz", d);
-	tree.Add("foobuz", b);
+	tree.Add("metadata2", d);
+	tree.Add("metadata3", b);
 	return tree;
 }
 
 MetadataTree GetTree(int i, double d, bool b) { return GetTree<MetadataTree>(i, d, b); }
 InPlace::MetadataTree GetInPlaceTree(int i, double d, bool b) { return GetTree<InPlace::MetadataTree>(i, d, b); }
 
-
 int main ()
 {
-	auto tree = GetTree(1, 2.0, true);
-	auto tree2 = GetInPlaceTree(1, 2.0, true);
-	std::cout << tree.size() << std::endl;
-	std::cout << tree2.size() << std::endl;
+	geiger::init();
+	geiger::suite<geiger::instr_profiler> s;
+
+	int unused = 0;
+
+	s.add("MetadaTree", [&]()
+	{
+		auto tree = GetTree(unused, 2.0, true);
+		unused += std::experimental::any_cast<int>(tree._metadata[0].second);
+	});
+
+	s.add("in-place MetadaTree", [&]()
+	{
+		auto tree = GetInPlaceTree(unused, 2.0, true);
+		unused += any_cast<int>(tree._metadata[0].second);
+	});
+
+	std::cout << unused << std::endl;
+
+	s.set_printer<geiger::printer::console<>>();
+	s.run();
 }
