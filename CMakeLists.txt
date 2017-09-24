@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 2.8)
 
 project(inplace_examples)
 add_executable(inplace_examples inplace_examples.cpp)
-target_link_libraries(inplace_examples papi)
 
 if (MSVC)
 	set(cxx_compile_options /std:c++17 /W4 /WX)

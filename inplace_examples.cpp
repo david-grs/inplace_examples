@@ -7,8 +7,6 @@
 #include <vector>
 #include <experimental/any>
 
-#include <geiger/geiger.h>
-
 namespace InPlace
 {
 using MetadataTag = inplace_string<15>;
@@ -57,27 +55,36 @@ TreeT GetTree(int i, double d, bool b)
 MetadataTree GetTree(int i, double d, bool b) { return GetTree<MetadataTree>(i, d, b); }
 InPlace::MetadataTree GetInPlaceTree(int i, double d, bool b) { return GetTree<InPlace::MetadataTree>(i, d, b); }
 
-int main ()
+int main (int argc, char** argv)
 {
-	geiger::init();
-	geiger::suite<geiger::instr_profiler> s;
-
-	int unused = 0;
-
-	s.add("MetadaTree", [&]()
+	if (argc != 2)
 	{
-		auto tree = GetTree(unused, 2.0, true);
-		unused += std::experimental::any_cast<int>(tree._metadata[0].second);
-	});
+		std::cerr << "usage: " << argv[0] << "<inplace|not>";
+		return 1;
+	}
 
-	s.add("in-place MetadaTree", [&]()
+	if (argv[1] == std::string("inplace"))
 	{
-		auto tree = GetInPlaceTree(unused, 2.0, true);
-		unused += any_cast<int>(tree._metadata[0].second);
-	});
+		int unused = 0;
 
-	std::cout << unused << std::endl;
+		for (int i = 0; i < 1000000; ++i)
+		{
+			auto tree = GetInPlaceTree(unused, 2.0, true);
+			unused += tree._metadata.size();
+		}
 
-	s.set_printer<geiger::printer::console<>>();
-	s.run();
+		std::cout << "inplace" << unused << std::endl;
+	}
+	else
+	{
+		int unused = 0;
+
+		for (int i = 0; i < 1000000; ++i)
+		{
+			auto tree = GetTree(unused, 2.0, true);
+			unused += tree._metadata.size();
+		}
+
+		std::cout << "notinplace" << unused << std::endl;
+	}
 }
