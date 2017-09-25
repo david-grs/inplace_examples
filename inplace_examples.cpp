@@ -52,39 +52,59 @@ TreeT GetTree(int i, double d, bool b)
 	return tree;
 }
 
-MetadataTree GetTree(int i, double d, bool b) { return GetTree<MetadataTree>(i, d, b); }
-InPlace::MetadataTree GetInPlaceTree(int i, double d, bool b) { return GetTree<InPlace::MetadataTree>(i, d, b); }
+MetadataTree GetTree(int i, double d, bool b)
+{
+	return GetTree<MetadataTree>(i, d, b);
+}
+
+InPlace::MetadataTree GetInPlaceTree(int i, double d, bool b)
+{
+	return GetTree<InPlace::MetadataTree>(i, d, b);
+}
+
+int BenchmarkGetTree()
+{
+	int elements = 0; // just to prevent compiler optimizations
+
+	for (int i = 0; i < 1000000; ++i)
+	{
+		auto tree = GetTree(elements, 2.0, true);
+		elements += tree._metadata.size() + tree._metadata[0].second.empty();
+	}
+
+	return elements;
+}
+
+
+int BenchmarkGetInPlaceTree()
+{
+	int elements = 0; // just to prevent compiler optimizations
+
+	for (int i = 0; i < 1000000; ++i)
+	{
+		auto tree = GetInPlaceTree(elements, 2.0, true);
+		elements += tree._metadata.size() + tree._metadata[0].second.empty();
+	}
+
+	return elements;
+}
 
 int main (int argc, char** argv)
 {
 	if (argc != 2)
 	{
-		std::cerr << "usage: " << argv[0] << "<inplace|not>";
+		std::cerr << "usage: " << argv[0] << "<tree|inplace_tree>";
 		return 1;
 	}
 
-	if (argv[1] == std::string("inplace"))
+	if (argv[1] == std::string("tree"))
 	{
-		int unused = 0;
-
-		for (int i = 0; i < 1000000; ++i)
-		{
-			auto tree = GetInPlaceTree(unused, 2.0, true);
-			unused += tree._metadata.size();
-		}
-
-		std::cout << "inplace" << unused << std::endl;
+		int unused = BenchmarkGetInPlaceTree();
+		std::cout << "inplace:" << unused << std::endl;
 	}
 	else
 	{
-		int unused = 0;
-
-		for (int i = 0; i < 1000000; ++i)
-		{
-			auto tree = GetTree(unused, 2.0, true);
-			unused += tree._metadata.size();
-		}
-
-		std::cout << "notinplace" << unused << std::endl;
+		int unused = BenchmarkGetTree();
+		std::cout << "notinplace:" << unused << std::endl;
 	}
 }
