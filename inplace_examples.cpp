@@ -17,10 +17,9 @@ using Metadata = std::pair<MetadataTag, MetadataValue>;
 struct MetadataTree
 {
 	template <typename StringT, typename ValueT>
-	MetadataTree& Add(StringT&& str, ValueT&& value)
+	void Add(StringT&& str, ValueT&& value)
 	{
 		_metadata.emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
-		return *this;
 	}
 
 	boost::container::static_vector<Metadata, 8> _metadata;
@@ -35,10 +34,9 @@ using Metadata = std::pair<MetadataTag, MetadataValue>;
 struct MetadataTree
 {
 	template <typename StringT, typename ValueT>
-	MetadataTree& Add(StringT&& str, ValueT&& value)
+	void Add(StringT&& str, ValueT&& value)
 	{
 		_metadata.emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
-		return *this;
 	}
 
 	std::vector<Metadata> _metadata;
@@ -48,7 +46,9 @@ template <typename TreeT>
 TreeT GetTree(int i, double d, bool b)
 {
 	TreeT tree;
-	tree.Add("metadata1", i).Add("metadata2", d).Add("metadata3", b);
+	tree.Add("metadata1", i);
+	tree.Add("metadata2", d);
+	tree.Add("metadata3", b);
 	return tree;
 }
 
