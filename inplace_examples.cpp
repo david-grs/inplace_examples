@@ -17,9 +17,10 @@ using Metadata = std::pair<MetadataTag, MetadataValue>;
 struct MetadataTree
 {
 	template <typename StringT, typename ValueT>
-	void Add(StringT&& str, ValueT&& value)
+	MetadataTree& Add(StringT&& str, ValueT&& value)
 	{
 		_metadata.emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
+		return *this;
 	}
 
 	boost::container::static_vector<Metadata, 8> _metadata;
@@ -34,9 +35,10 @@ using Metadata = std::pair<MetadataTag, MetadataValue>;
 struct MetadataTree
 {
 	template <typename StringT, typename ValueT>
-	void Add(StringT&& str, ValueT&& value)
+	MetadataTree& Add(StringT&& str, ValueT&& value)
 	{
 		_metadata.emplace_back(std::forward<StringT>(str), std::forward<ValueT>(value));
+		return *this;
 	}
 
 	std::vector<Metadata> _metadata;
@@ -46,20 +48,8 @@ template <typename TreeT>
 TreeT GetTree(int i, double d, bool b)
 {
 	TreeT tree;
-	tree.Add("metadata1", i);
-	tree.Add("metadata2", d);
-	tree.Add("metadata3", b);
+	tree.Add("metadata1", i).Add("metadata2", d).Add("metadata3", b);
 	return tree;
-}
-
-MetadataTree GetTree(int i, double d, bool b)
-{
-	return GetTree<MetadataTree>(i, d, b);
-}
-
-InPlace::MetadataTree GetInPlaceTree(int i, double d, bool b)
-{
-	return GetTree<InPlace::MetadataTree>(i, d, b);
 }
 
 int BenchmarkGetTree()
@@ -68,7 +58,7 @@ int BenchmarkGetTree()
 
 	for (int i = 0; i < 1000000; ++i)
 	{
-		auto tree = GetTree(elements, 2.0, true);
+		auto tree = GetTree<MetadataTree>(elements, 2.0, true);
 		elements += tree._metadata.size() + tree._metadata[0].second.empty();
 	}
 
@@ -78,14 +68,12 @@ int BenchmarkGetTree()
 
 int BenchmarkGetInPlaceTree()
 {
-	int elements = 0; // just to prevent compiler optimizations
-
+	int elements = 0;
 	for (int i = 0; i < 1000000; ++i)
 	{
-		auto tree = GetInPlaceTree(elements, 2.0, true);
+		auto tree = GetTree<InPlace::MetadataTree>(elements, 2.0, true);
 		elements += tree._metadata.size() + tree._metadata[0].second.empty();
 	}
-
 	return elements;
 }
 
