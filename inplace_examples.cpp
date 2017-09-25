@@ -54,14 +54,12 @@ TreeT GetTree(int i, double d, bool b)
 
 int BenchmarkGetTree()
 {
-	int elements = 0; // just to prevent compiler optimizations
-
+	int elements = 0;
 	for (int i = 0; i < 1000000; ++i)
 	{
-		auto tree = GetTree<MetadataTree>(elements, 2.0, true);
-		elements += tree._metadata.size() + tree._metadata[0].second.empty();
+		auto tree = GetTree<MetadataTree>(1, 2.0, true);
+		elements += tree._metadata.size() + std::experimental::any_cast<int>(tree._metadata[0].second);
 	}
-
 	return elements;
 }
 
@@ -71,8 +69,8 @@ int BenchmarkGetInPlaceTree()
 	int elements = 0;
 	for (int i = 0; i < 1000000; ++i)
 	{
-		auto tree = GetTree<InPlace::MetadataTree>(elements, 2.0, true);
-		elements += tree._metadata.size() + tree._metadata[0].second.empty();
+		auto tree = GetTree<InPlace::MetadataTree>(1, 2.0, true);
+		elements += tree._metadata.size() + any_cast<int>(tree._metadata[0].second);
 	}
 	return elements;
 }
@@ -85,14 +83,16 @@ int main (int argc, char** argv)
 		return 1;
 	}
 
-	if (argv[1] == std::string("tree"))
-	{
-		int unused = BenchmarkGetInPlaceTree();
-		std::cout << "inplace:" << unused << std::endl;
-	}
-	else
+	const std::string argv1(argv[1]);
+
+	if (argv1 == "tree")
 	{
 		int unused = BenchmarkGetTree();
+		std::cout << "inplace:" << unused << std::endl;
+	}
+	else if (argv1 == "inplace_tree")
+	{
+		int unused = BenchmarkGetInPlaceTree();
 		std::cout << "notinplace:" << unused << std::endl;
 	}
 }
